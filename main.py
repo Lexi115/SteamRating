@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from imblearn.over_sampling import SMOTE
 import pandas as pd
 from imblearn.under_sampling import RandomUnderSampler
 
@@ -45,4 +44,3 @@ y_pred = model.predict(X_test)
 
 # Valuta modello usando le metriche di valutazione
 utils.print_metrics(y_test, y_pred)
-
