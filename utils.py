@@ -1,4 +1,3 @@
-from pandas.core.interchange import dataframe
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
 from sklearn.preprocessing import MinMaxScaler
 
