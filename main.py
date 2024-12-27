@@ -11,9 +11,9 @@ import utils
 # Importa dataset dal file CSV e convertilo in un DataFrame
 df = pd.read_csv('./resources/games.csv')
 
-df['user_reviews_bin'] = df['user_reviews'].apply(lambda x: 1 if x >= 200 else 0)
-df['price_original_bin'] = df['price_original'].apply(lambda x: 1 if x >= 19.99 else 0)
-df['price_final_bin'] = df['price_final'].apply(lambda x: 1 if x >= 19.99 else 0)
+df['user_reviews_bin'] = df['user_reviews'].apply(lambda x: 1 if x >= 105 else 0)
+df['price_original_bin'] = df['price_original'].apply(lambda x: 1 if x >= 79.99 else 0)
+df['price_final_bin'] = df['price_final'].apply(lambda x: 1 if x >= 79.99 else 0)
 df['is_multiplatform'] = df[['win', 'mac', 'linux']].sum(axis=1).apply(lambda x: 1 if x > 1 else 0)
 df['before_2020'] = df['date_release'].apply(lambda x: 1 if datetime.strptime(x, '%Y-%m-%d').year < 2020 else 0)
 
@@ -30,7 +30,9 @@ smote = SMOTE(random_state = 42)
 X_train_resampled, y_train_resampled = smote.fit_resample(X_train, y_train)
 
 # Addestra il modello classificatore
-model = BernoulliNB(alpha = 0.5, fit_prior = True)
+model = BernoulliNB(alpha=0.1, fit_prior=True)
+
+# Addestra il modello sui dati di training
 model.fit(X_train_resampled, y_train_resampled)
 
 # Fai predizioni
