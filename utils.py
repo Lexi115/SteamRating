@@ -4,7 +4,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 def print_metrics(_test, _pred):
     print(f'Confusion Matrix:')
-    print(confusion_matrix(_test, _pred, labels = [0, 1]))
+    print(confusion_matrix(_test, _pred, labels = [1, 0]))
 
     accuracy = accuracy_score(_test, _pred)
     print(f'Accuracy: {accuracy * 100:.1f}%')
