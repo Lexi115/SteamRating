@@ -1,3 +1,6 @@
+from imblearn.under_sampling import RandomUnderSampler
+from imblearn.over_sampling import SMOTE
+
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
 from sklearn.preprocessing import MinMaxScaler
 
@@ -23,3 +26,12 @@ def scale(_dataframe, _row, _new_row):
     scaler = MinMaxScaler()
     _dataframe[_new_row] = scaler.fit_transform(_dataframe[[_row]])
 
+
+def undersample(_x_train, _y_train, _strategy = 1):
+    underSampler = RandomUnderSampler(sampling_strategy=_strategy, random_state=42)
+    return underSampler.fit_resample(_x_train, _y_train)
+
+
+def oversample(_x_train, _y_train):
+    overSampler = SMOTE()
+    return overSampler.fit_resample(_x_train, _y_train)
