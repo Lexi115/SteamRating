@@ -6,6 +6,9 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.naive_bayes import BernoulliNB
 from sklearn.preprocessing import MinMaxScaler
 
+import numpy as np
+import matplotlib.pyplot as plt
+
 
 def print_metrics(_test, _pred, _prob):
     print(f'Confusion Matrix:')
@@ -68,3 +71,32 @@ def print_auc_record(auc_record, k):
     for smoothing, smoothing_record in auc_record.items():
         for fit_prior, auc in smoothing_record.items():
             print(f'{smoothing}            {fit_prior}       {auc/k:.5f}')
+
+
+def get_roc_curve(_y_test, _y_prob):
+    thresholds = np.arange(0.0, 1.1, 0.05)
+    true_pos, false_pos = [0] * len(thresholds), [0] * len(thresholds)
+    for pred, y in zip(_y_prob, _y_test):
+        for i, threshold in enumerate(thresholds):
+            if pred >= threshold:
+                if y == 1:
+                    true_pos[i] += 1
+                else:
+                    false_pos[i] += 1
+            else:
+                break
+
+    return true_pos, false_pos
+
+
+def draw_roc_curve(_true_pos_rate, _false_pos_rate):
+    plt.figure()
+    lw = 2
+    plt.plot(_false_pos_rate, _true_pos_rate, color='darkorange', lw=lw)
+    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver Operating Characteristic')
+    plt.show()

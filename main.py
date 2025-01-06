@@ -46,3 +46,15 @@ y_prob = model.predict_proba(X_test)[:, 1]
 
 # Valuta modello usando le metriche di valutazione
 utils.print_metrics(y_test, y_pred, y_prob)
+
+# Calcola ROC curve
+true_pos, false_pos = utils.get_roc_curve(y_test, y_prob)
+
+n_pos_test = (y_test == 1).sum()
+n_neg_test = (y_test == 0).sum()
+
+true_pos_rate = [tp / n_pos_test for tp in true_pos]
+false_pos_rate = [fp / n_neg_test for fp in false_pos]
+
+# Visualizza grafico ROC curve
+utils.draw_roc_curve(true_pos_rate, false_pos_rate)
