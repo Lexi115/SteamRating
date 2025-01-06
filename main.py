@@ -33,6 +33,9 @@ undersampler = RandomUnderSampler(sampling_strategy=0.63, random_state=42)
 X_train_resampled, y_train_resampled = undersampler.fit_resample(X_train, y_train)
 #X_train_resampled, y_train_resampled = X_train, y_train
 
+print("Resampled X Train: ", X_train_resampled.shape)
+print("Resampled y Train: ", y_train_resampled.shape)
+
 # Addestra il modello classificatore
 model = BernoulliNB(alpha=1.0, fit_prior=True)
 
