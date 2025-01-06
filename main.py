@@ -34,7 +34,7 @@ X_train_resampled, y_train_resampled = undersampler.fit_resample(X_train, y_trai
 #X_train_resampled, y_train_resampled = X_train, y_train
 
 # Addestra il modello classificatore
-model = BernoulliNB(alpha=0.1, fit_prior=True)
+model = BernoulliNB(alpha=1.0, fit_prior=True)
 
 # Addestra il modello sui dati di training
 model.fit(X_train_resampled, y_train_resampled)
