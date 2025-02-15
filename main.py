@@ -1,19 +1,20 @@
 from sklearn.model_selection import train_test_split
-from sklearn.naive_bayes import BernoulliNB
-
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.preprocessing import OneHotEncoder
 import helper
 import utils
+import pandas as pd
 
-# Importa dataset dal file CSV e convertilo in un DataFrame
-df = helper.get_dataframe_bernoulli()
+# Importa dataset e convertilo in DataFrame
+df = helper.get_dataframe_multinomial()
 
 # Selezione delle features e del target
-X = df[['user_reviews_bin', 'price_original_bin', 'is_multiplatform', 'before_2020']]
+X = df[['user_reviews_cat', 'price_original_cat', 'before_2020']]
 y = df['liked']
 
 print("Distribution", y.value_counts())
 
-# k fold cross validation
+# k-fold cross-validation
 k = 5
 smoothing_factor_option = [1, 2, 3, 4, 5, 6]
 fit_prior_option = [True, False]
@@ -21,21 +22,20 @@ auc_record = utils.get_auc_record(X, y, smoothing_factor_option, fit_prior_optio
 utils.print_auc_record(auc_record, k)
 
 # Dividi in dati di train e test (Pareto 80/20)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 print("X Train: ", X_train.shape)
 print("y Train: ", y_train.shape)
 print("Distribution", y_train.value_counts())
 
 # Applica undersampling parziale
-X_train_resampled, y_train_resampled = utils.undersample(X_train, y_train, 0.63)
-
+X_train_resampled, y_train_resampled = utils.undersample(X_train, y_train, 1)
 print("Resampled X Train: ", X_train_resampled.shape)
 print("Resampled y Train: ", y_train_resampled.shape)
 print("Resampled Distribution", y_train_resampled.value_counts())
 
 # Addestra il modello classificatore
-model = BernoulliNB(alpha=2.0, fit_prior=True)
+model = MultinomialNB(alpha=2.0, fit_prior=True)
 
 # Addestra il modello sui dati di training
 model.fit(X_train_resampled, y_train_resampled)
