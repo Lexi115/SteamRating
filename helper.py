@@ -26,7 +26,7 @@ def get_dataframe_multinomial():
     df = pd.read_csv(dataset_filepath)
 
     # Convertiamo user_reviews in categorie
-    df['user_reviews_cat'] = pd.cut(df['user_reviews'], bins=[-1, 0, 100, 2000, np.inf], labels=[0, 1, 2, 3])
+    df['user_reviews_cat'] = pd.cut(df['user_reviews'], bins=[-1, 0, 50, 500, np.inf], labels=[0, 1, 2, 3])
 
     # Prezzo in categorie
     df['price_original_cat'] = pd.cut(df['price_original'], bins=[-1, 0, 10, 50, np.inf], labels=[0, 1, 2, 3])
