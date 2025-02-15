@@ -1,15 +1,18 @@
+from matplotlib import pyplot as plt
+from sklearn.metrics import roc_curve
 from sklearn.model_selection import train_test_split
-from sklearn.naive_bayes import MultinomialNB
+from sklearn.naive_bayes import MultinomialNB, BernoulliNB
 from sklearn.preprocessing import OneHotEncoder
 import helper
 import utils
 import pandas as pd
 
 # Importa dataset e convertilo in DataFrame
-df = helper.get_dataframe_multinomial()
-
+df = helper.get_dataframe_bernoulli()
+print(df.head())
 # Selezione delle features e del target
-X = df[['user_reviews_cat', 'price_original_cat', 'before_2020']]
+X = df[['user_reviews_bin', 'price_final_f2p_bin', 'price_final_over_50_bin', 'is_multiplatform', 'before_2019']]
+#X = df[['user_reviews_cat', 'price_original_cat', 'before_2020']]
 y = df['liked']
 
 print("Distribution", y.value_counts())
@@ -29,13 +32,14 @@ print("y Train: ", y_train.shape)
 print("Distribution", y_train.value_counts())
 
 # Applica undersampling parziale
-X_train_resampled, y_train_resampled = utils.undersample(X_train, y_train, 1)
+X_train_resampled, y_train_resampled = utils.undersample(X_train, y_train, 0.7)
+X_train_resampled, y_train_resampled = utils.oversample(X_train_resampled, y_train_resampled)
 print("Resampled X Train: ", X_train_resampled.shape)
 print("Resampled y Train: ", y_train_resampled.shape)
 print("Resampled Distribution", y_train_resampled.value_counts())
 
 # Addestra il modello classificatore
-model = MultinomialNB(alpha=2.0, fit_prior=True)
+model = BernoulliNB(alpha=2.0, fit_prior=True)
 
 # Addestra il modello sui dati di training
 model.fit(X_train_resampled, y_train_resampled)
@@ -48,13 +52,13 @@ y_prob = model.predict_proba(X_test)[:, 1]
 utils.print_metrics(y_test, y_pred, y_prob)
 
 # Calcola ROC curve
-true_pos, false_pos = utils.get_roc_curve(y_test, y_prob)
+false_pos, true_pos, _ = roc_curve(y_test, y_prob)
 
-n_pos_test = (y_test == 1).sum()
-n_neg_test = (y_test == 0).sum()
-
-true_pos_rate = [tp / n_pos_test for tp in true_pos]
-false_pos_rate = [fp / n_neg_test for fp in false_pos]
-
-# Visualizza grafico ROC curve
-utils.draw_roc_curve(true_pos_rate, false_pos_rate)
+plt.figure()
+plt.plot(false_pos, true_pos, color='red', linestyle='-', label="Sklearn ROC")
+plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--', label="Random Guess")
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic')
+plt.legend()
+plt.show()

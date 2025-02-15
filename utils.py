@@ -26,8 +26,6 @@ def print_metrics(_test, _pred, _prob):
     f1 = f1_score(_test, _pred, pos_label = 1)
     print(f'F1 Score: {f1 * 100:.1f}%')
 
-    print('AUC with best model:', roc_auc_score(_test, _prob))
-
 
 def scale(_dataframe, _row, _new_row):
     scaler = MinMaxScaler()
@@ -46,7 +44,7 @@ def oversample(_x_train, _y_train):
 
 def get_auc_record(_x, _y, smoothing_factor_option, fit_prior_option, k):
     auc_record = {}
-    k_fold = StratifiedKFold(n_splits=k, shuffle=True, random_state=42)
+    k_fold = StratifiedKFold(n_splits=k, shuffle=True,                                   random_state=42)
 
     for train_indices, test_indices in k_fold.split(_x, _y):
         X_train, X_test = _x.iloc[train_indices], _x.iloc[test_indices]
@@ -73,20 +71,25 @@ def print_auc_record(auc_record, k):
             print(f'{smoothing}            {fit_prior}       {auc/k:.5f}')
 
 
-def get_roc_curve(_y_test, _y_prob):
+def get_roc_curve(y_test, y_prob):
     thresholds = np.arange(0.0, 1.1, 0.05)
-    true_pos, false_pos = [0] * len(thresholds), [0] * len(thresholds)
-    for pred, y in zip(_y_prob, _y_test):
-        for i, threshold in enumerate(thresholds):
-            if pred >= threshold:
-                if y == 1:
-                    true_pos[i] += 1
-                else:
-                    false_pos[i] += 1
-            else:
-                break
+    true_pos_rate, false_pos_rate = [], []
 
-    return true_pos, false_pos
+    P = np.sum(y_test == 1)  # Numero totale di positivi
+    N = np.sum(y_test == 0)  # Numero totale di negativi
+
+    for threshold in thresholds:
+        TP = np.sum((y_prob >= threshold) & (y_test == 1))
+        FP = np.sum((y_prob >= threshold) & (y_test == 0))
+
+        TPR = TP / P if P > 0 else 0  # True Positive Rate (Sensibilità)
+        FPR = FP / N if N > 0 else 0  # False Positive Rate
+
+        true_pos_rate.append(TPR)
+        false_pos_rate.append(FPR)
+
+    return false_pos_rate, true_pos_rate  # ROC usa (FPR, TPR)
+
 
 
 def draw_roc_curve(_true_pos_rate, _false_pos_rate):
