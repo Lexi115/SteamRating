@@ -90,7 +90,7 @@ def get_roc_curve(y_test, y_prob):
 
     return false_pos_rate, true_pos_rate  # ROC usa (FPR, TPR)
 
-def draw_roc_curve(_true_pos_rate, _false_pos_rate):
+def draw_roc_curve(_false_pos_rate, _true_pos_rate):
     plt.figure()
     lw = 2
 
