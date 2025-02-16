@@ -1,64 +1,61 @@
-from matplotlib import pyplot as plt
-from sklearn.metrics import roc_curve
+from pprint import pprint
+
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, roc_auc_score
 from sklearn.model_selection import train_test_split
-from sklearn.naive_bayes import MultinomialNB, BernoulliNB
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.naive_bayes import BernoulliNB
+
 import helper
 import utils
-import pandas as pd
+from utils import draw_roc_curve
 
-# Importa dataset e convertilo in DataFrame
+# Carica dataset
 df = helper.get_dataframe_bernoulli()
-print(df.head())
-# Selezione delle features e del target
-X = df[['user_reviews_bin', 'price_final_f2p_bin', 'price_final_over_50_bin', 'is_multiplatform', 'before_2019']]
-#X = df[['user_reviews_cat', 'price_original_cat', 'before_2020']]
+X = df[[
+    'user_reviews_bin',
+    'price_final_f2p_bin',
+    'price_final_over_40_bin',
+    'is_multiplatform',
+    'before_2019',
+    'before_2010'
+]]
 y = df['liked']
 
-print("Distribution", y.value_counts())
 
-# k-fold cross-validation
-k = 5
-smoothing_factor_option = [1, 2, 3, 4, 5, 6]
-fit_prior_option = [True, False]
-auc_record = utils.get_auc_record(X, y, smoothing_factor_option, fit_prior_option, k)
-utils.print_auc_record(auc_record, k)
+print("Distribuzione target:")
+print(y.value_counts())
 
-# Dividi in dati di train e test (Pareto 80/20)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Bilanciamento dei dati
+X_res, y_res = utils.undersample(X, y, 0.63)
 
-print("X Train: ", X_train.shape)
-print("y Train: ", y_train.shape)
-print("Distribution", y_train.value_counts())
+# Divisione train/test
+X_train, X_test, y_train, y_test = train_test_split(X_res, y_res, test_size=0.2, random_state=42)
 
-# Applica undersampling parziale
-X_train_resampled, y_train_resampled = utils.undersample(X_train, y_train, 0.7)
-X_train_resampled, y_train_resampled = utils.oversample(X_train_resampled, y_train_resampled)
-print("Resampled X Train: ", X_train_resampled.shape)
-print("Resampled y Train: ", y_train_resampled.shape)
-print("Resampled Distribution", y_train_resampled.value_counts())
+print("Dimensioni train set:", X_train.shape, y_train.shape)
+print("Distribuzione target train:")
+print(y_train.value_counts())
 
-# Addestra il modello classificatore
-model = BernoulliNB(alpha=2.0, fit_prior=True)
+print("Dimensioni train bilanciato:", X_train.shape, y_train.shape)
+print("Distribuzione target train bilanciato:")
+print(y_train.value_counts())
 
-# Addestra il modello sui dati di training
-model.fit(X_train_resampled, y_train_resampled)
+# Parametri per k-fold cross-validation
+best_alpha, best_fit_prior = utils.k_fold(X_train, y_train, 5)
 
-# Fai predizioni
+# Addestramento modello
+model = BernoulliNB(alpha=best_alpha, fit_prior=best_fit_prior)
+model.fit(X_train, y_train)
+
+# Predizioni
 y_pred = model.predict(X_test)
 y_prob = model.predict_proba(X_test)[:, 1]
 
-# Valuta modello usando le metriche di valutazione
+# Valutazione modello
 utils.print_metrics(y_test, y_pred, y_prob)
 
-# Calcola ROC curve
-false_pos, true_pos, _ = roc_curve(y_test, y_prob)
+# Curva ROC
+auc_value = roc_auc_score(y_test, y_prob)
+print("AUC:", auc_value)
+false_pos_rate, true_pos_rate, _ = roc_curve(y_test, y_prob)
+draw_roc_curve(false_pos_rate, true_pos_rate)
 
-plt.figure()
-plt.plot(false_pos, true_pos, color='red', linestyle='-', label="Sklearn ROC")
-plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--', label="Random Guess")
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-plt.title('Receiver Operating Characteristic')
-plt.legend()
-plt.show()

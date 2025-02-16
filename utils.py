@@ -90,16 +90,47 @@ def get_roc_curve(y_test, y_prob):
 
     return false_pos_rate, true_pos_rate  # ROC usa (FPR, TPR)
 
-
-
 def draw_roc_curve(_true_pos_rate, _false_pos_rate):
     plt.figure()
     lw = 2
-    plt.plot(_false_pos_rate, _true_pos_rate, color='darkorange', lw=lw)
-    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+
+    # ROC effettiva
+    plt.plot(_false_pos_rate, _true_pos_rate, color='darkorange', lw=lw, label='ROC Curve')
+
+    # ROC ideale (va subito a 1 e poi resta costante)
+    ideal_fpr = [0, 0, 1]
+    ideal_tpr = [0, 1, 1]
+    plt.plot(ideal_fpr, ideal_tpr, color='green', lw=lw, linestyle='--', label='Ideal ROC Curve')
+
+    # Linea diagonale casuale
+    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--', label='Random Classifier')
+
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.title('Receiver Operating Characteristic')
+    plt.legend(loc='lower right')
     plt.show()
+
+
+def k_fold(_x, _y, k):
+    smoothing_factors = [1, 2, 3, 4, 5, 6]
+    fit_prior_options = [True, False]
+
+    auc_record = get_auc_record(_x, _y, smoothing_factors, fit_prior_options, k)
+
+    # Inizializzazione dei migliori valori
+    best_alpha = None
+    best_fit_prior = None
+    best_auc = -float('inf')  # Minimo iniziale
+
+    # Scansiona l'AUC record per trovare la combinazione migliore
+    for alpha, fit_prior_dict in auc_record.items():
+        for fit_prior, auc in fit_prior_dict.items():
+            if auc > best_auc:
+                best_auc = auc
+                best_alpha = alpha
+                best_fit_prior = fit_prior
+
+    return best_alpha, best_fit_prior

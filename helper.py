@@ -9,13 +9,17 @@ dataset_filepath = './resources/games.csv'
 
 def get_dataframe_bernoulli():
     df = pd.read_csv(dataset_filepath)
-#todo rimuovere giochi con <50 recensioni
+    #Pulizia outliers
+    df = df[df['user_reviews'] > 20]
+    df = df[df['price_final'] < 100]
+
     df['user_reviews_bin'] = df['user_reviews'].apply(lambda x: 1 if x >= 10000 else 0)
     df['price_final_f2p_bin'] = df['price_final'].apply(lambda x: 1 if x == 0 else 0)
     df['price_final_over_50_bin'] = df['price_final'].apply(lambda x: 1 if x >= 40 else 0)
     df['is_multiplatform'] = df[['win', 'mac', 'linux']].sum(axis=1).apply(lambda x: 1 if x > 1 else 0)
-    df['before_2019'] = df['date_release'].apply(lambda x: 1 if datetime.strptime(x, '%Y-%m-%d').year < 2019 else 0)
-
+    df['before_2019'] = df['date_release'].apply(lambda x: 1 if ((datetime.strptime(x, '%Y-%m-%d').year < 2019) and (datetime.strptime(x, '%Y-%m-%d').year >= 2010)) else 0)
+    df['before_2010'] = df['date_release'].apply(lambda x: 1 if (datetime.strptime(x, '%Y-%m-%d').year < 2010) else 0)
+    df['cross_reviews_2019'] = df['user_reviews_bin'] * df['before_2019']
     # target
     df['liked'] = df['positive_ratio'].apply(lambda x: 1 if x >= 60 else 0)
 
@@ -35,6 +39,6 @@ def get_dataframe_multinomial():
     df['before_2020'] = df['date_release'].apply(lambda x: 1 if datetime.strptime(x, '%Y-%m-%d').year < 2020 else 0)
 
     # Target
-    df['liked'] = df['positive_ratio'].apply(lambda x: 1 if x >= 60 else 0)
+    df['liked'] = df['positive_ratio'].apply(lambda x: 1 if x >= 50 else 0)
 
     return df
