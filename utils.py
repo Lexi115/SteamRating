@@ -4,7 +4,7 @@ from imblearn.over_sampling import SMOTE
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 from sklearn.model_selection import StratifiedKFold
 from sklearn.naive_bayes import BernoulliNB
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, label_binarize
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,6 +26,36 @@ def print_metrics(_test, _pred, _prob):
     f1 = f1_score(_test, _pred, pos_label = 1)
     print(f'F1 Score: {f1 * 100:.1f}%')
 
+def print_metrics_multiclass(_test, _pred, _prob, num_classes):
+        print('Confusion Matrix:')
+        cm = confusion_matrix(_test, _pred)
+        print(cm)
+
+        accuracy = accuracy_score(_test, _pred)
+        print(f'Accuracy: {accuracy * 100:.1f}%')
+
+        # Calcolo precision, recall, f1 per ogni classe
+        precisions = precision_score(_test, _pred, average=None, zero_division=0)
+        recalls = recall_score(_test, _pred, average=None, zero_division=0)
+        f1s = f1_score(_test, _pred, average=None, zero_division=0)
+
+        for i in range(num_classes):
+            print(f'Class {i} - Precision: {precisions[i] * 100:.1f}%')
+            print(f'Class {i} - Recall: {recalls[i] * 100:.1f}%')
+            print(f'Class {i} - F1 Score: {f1s[i] * 100:.1f}%')
+
+        # Metriche macro
+        macro_precision = precision_score(_test, _pred, average='macro', zero_division=0)
+        macro_recall = recall_score(_test, _pred, average='macro', zero_division=0)
+        macro_f1 = f1_score(_test, _pred, average='macro', zero_division=0)
+
+        print(f'\nMacro Precision: {macro_precision * 100:.1f}%')
+        print(f'Macro Recall: {macro_recall * 100:.1f}%')
+        print(f'Macro F1 Score: {macro_f1 * 100:.1f}%')
+
+        # Calcolo AUC
+        auc_value = roc_auc_score(_test, _prob, multi_class='ovr', average='macro')
+        print(f'\nAUC (Macro): {auc_value:.4f}')
 
 def scale(_dataframe, _row, _new_row):
     scaler = MinMaxScaler()
@@ -44,7 +74,7 @@ def oversample(_x_train, _y_train):
 
 def get_auc_record(_x, _y, smoothing_factor_option, fit_prior_option, k):
     auc_record = {}
-    k_fold = StratifiedKFold(n_splits=k, shuffle=True,                                   random_state=42)
+    k_fold = StratifiedKFold(n_splits=k, shuffle=True, random_state=42)
 
     for train_indices, test_indices in k_fold.split(_x, _y):
         X_train, X_test = _x.iloc[train_indices], _x.iloc[test_indices]
