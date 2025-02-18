@@ -26,8 +26,36 @@ def print_metrics(_test, _pred, _prob):
     f1 = f1_score(_test, _pred, pos_label = 1)
     print(f'F1 Score: {f1 * 100:.1f}%')
 
-    print('AUC with best model:', roc_auc_score(_test, _prob))
+def print_metrics_multiclass(_test, _pred, _prob, num_classes):
+        print('Confusion Matrix:')
+        cm = confusion_matrix(_test, _pred)
+        print(cm)
 
+        accuracy = accuracy_score(_test, _pred)
+        print(f'Accuracy: {accuracy * 100:.1f}%')
+
+        # Calcolo precision, recall, f1 per ogni classe
+        precisions = precision_score(_test, _pred, average=None, zero_division=0)
+        recalls = recall_score(_test, _pred, average=None, zero_division=0)
+        f1s = f1_score(_test, _pred, average=None, zero_division=0)
+
+        for i in range(num_classes):
+            print(f'Class {i} - Precision: {precisions[i] * 100:.1f}%')
+            print(f'Class {i} - Recall: {recalls[i] * 100:.1f}%')
+            print(f'Class {i} - F1 Score: {f1s[i] * 100:.1f}%')
+
+        # Metriche macro
+        macro_precision = precision_score(_test, _pred, average='macro', zero_division=0)
+        macro_recall = recall_score(_test, _pred, average='macro', zero_division=0)
+        macro_f1 = f1_score(_test, _pred, average='macro', zero_division=0)
+
+        print(f'\nMacro Precision: {macro_precision * 100:.1f}%')
+        print(f'Macro Recall: {macro_recall * 100:.1f}%')
+        print(f'Macro F1 Score: {macro_f1 * 100:.1f}%')
+
+        # Calcolo AUC
+        auc_value = roc_auc_score(_test, _prob, multi_class='ovr', average='macro')
+        print(f'\nAUC (Macro): {auc_value:.4f}')
 
 def scale(_dataframe, _row, _new_row):
     scaler = MinMaxScaler()
@@ -73,30 +101,66 @@ def print_auc_record(auc_record, k):
             print(f'{smoothing}            {fit_prior}       {auc/k:.5f}')
 
 
-def get_roc_curve(_y_test, _y_prob):
+def get_roc_curve(y_test, y_prob):
     thresholds = np.arange(0.0, 1.1, 0.05)
-    true_pos, false_pos = [0] * len(thresholds), [0] * len(thresholds)
-    for pred, y in zip(_y_prob, _y_test):
-        for i, threshold in enumerate(thresholds):
-            if pred >= threshold:
-                if y == 1:
-                    true_pos[i] += 1
-                else:
-                    false_pos[i] += 1
-            else:
-                break
+    true_pos_rate, false_pos_rate = [], []
 
-    return true_pos, false_pos
+    P = np.sum(y_test == 1)  # Numero totale di positivi
+    N = np.sum(y_test == 0)  # Numero totale di negativi
 
+    for threshold in thresholds:
+        TP = np.sum((y_prob >= threshold) & (y_test == 1))
+        FP = np.sum((y_prob >= threshold) & (y_test == 0))
 
-def draw_roc_curve(_true_pos_rate, _false_pos_rate):
+        TPR = TP / P if P > 0 else 0  # True Positive Rate (Sensibilità)
+        FPR = FP / N if N > 0 else 0  # False Positive Rate
+
+        true_pos_rate.append(TPR)
+        false_pos_rate.append(FPR)
+
+    return false_pos_rate, true_pos_rate  # ROC usa (FPR, TPR)
+
+def draw_roc_curve(_false_pos_rate, _true_pos_rate):
     plt.figure()
     lw = 2
-    plt.plot(_false_pos_rate, _true_pos_rate, color='darkorange', lw=lw)
-    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+
+    # ROC effettiva
+    plt.plot(_false_pos_rate, _true_pos_rate, color='darkorange', lw=lw, label='ROC Curve')
+
+    # ROC ideale (va subito a 1 e poi resta costante)
+    ideal_fpr = [0, 0, 1]
+    ideal_tpr = [0, 1, 1]
+    plt.plot(ideal_fpr, ideal_tpr, color='green', lw=lw, linestyle='--', label='Ideal ROC Curve')
+
+    # Linea diagonale casuale
+    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--', label='Random Classifier')
+
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.title('Receiver Operating Characteristic')
+    plt.legend(loc='lower right')
     plt.show()
+
+
+def k_fold(_x, _y, k):
+    smoothing_factors = [1, 2, 3, 4, 5, 6]
+    fit_prior_options = [True, False]
+
+    auc_record = get_auc_record(_x, _y, smoothing_factors, fit_prior_options, k)
+
+    # Inizializzazione dei migliori valori
+    best_alpha = None
+    best_fit_prior = None
+    best_auc = -float('inf')  # Minimo iniziale
+
+    # Scansiona l'AUC record per trovare la combinazione migliore
+    for alpha, fit_prior_dict in auc_record.items():
+        for fit_prior, auc in fit_prior_dict.items():
+            if auc > best_auc:
+                best_auc = auc
+                best_alpha = alpha
+                best_fit_prior = fit_prior
+
+    return best_alpha, best_fit_prior
