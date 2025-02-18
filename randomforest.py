@@ -14,33 +14,17 @@ def get_dataframe_randomforest():
     df = df[df['user_reviews'] > 20]
     df = df[df['price_final'] < 100]
 
-    # Convertiamo user_reviews in categorie
-    df['user_reviews_cat'] = pd.cut(df['user_reviews'],
-                                    bins=[20, 1000, 2000, np.inf],
-                                    labels=[0, 1, 2],
-                                    include_lowest=True).astype(int)
-
-    # Prezzo in categorie
-    # 0 (Free to play)
-    # 1 = (0-9.99]
-    # 2 = (10-29.99]
-    # 3 = (30-inf)
-    df['price_final_cat'] = pd.cut(df['price_final'],
-                                   bins=[-1, 0, 10, 20, np.inf],
-                                   labels=[0, 1, 2, 3],
-                                   include_lowest=True).astype(int)
     # Multipiattaforma
     df['is_multiplatform'] = (df[['win', 'mac', 'linux']].sum(axis=1) >= 2).astype(int)
 
-    # Data di rilascio (prima/dopo il 2020)
-    df['date_release'] = pd.to_datetime(df['date_release'], errors='coerce')
-    df['release_period'] = pd.cut(df['date_release'].dt.year,
-                                  bins=[-np.inf, 2009, 2019, np.inf],
-                                  labels=[0, 1, 2],
-                                  right=True).astype(int)
+    # Anno di rilascio
+    df['release_year'] = pd.to_datetime(df['date_release'], errors='coerce').dt.year
+
+    # Gioco gratuito
+    df['free_to_play'] = df['price_final'].apply(lambda x: 1 if x == 0 else 0)
 
     # Target
-    df['liked'] = df['positive_ratio'].apply(lambda x: 1 if x > 50 else 0)
+    df['liked'] = df['positive_ratio'].apply(lambda x: 1 if x >= 60 else 0)
 
     return df
 
@@ -49,10 +33,11 @@ def train():
     # Carica dataset
     df = get_dataframe_randomforest()
     X = df[[
-        'user_reviews_cat',
-        'price_final_cat',
+        'user_reviews',
+        'price_final',
         'is_multiplatform',
-        'release_period',
+        'release_year',
+        'free_to_play',
     ]]
     y = df['liked']
 
@@ -63,28 +48,29 @@ def train():
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, stratify=y, random_state=42)
 
-
     print("Distribuzione target train (prima del bilanciamento):")
     print(y_train.value_counts(), "\n")
 
     # Bilanciamento del training set
     X_train_res, y_train_res = utils.undersample(X_train, y_train, 0.63)
-    #X_train_res, y_train_res = utils.oversample(X_train, y_train)
+    #X_train_res, y_train_res = utils.oversample(X_train_res, y_train_res)
+
 
     # Addestramento modello
     rf = RandomForestClassifier(random_state=42)
 
     # Ottimizzazione dei parametri con GridSearchCV
     param_grid = {
-        'n_estimators': [50, 100, 200],
-        'max_depth': [None, 10, 20, 30],
-        'min_samples_split': [2, 5, 10],
-        'min_samples_leaf': [1, 2, 4],
-        'max_features': [None, 'sqrt', 'log2']
+        'n_estimators': [50],
+        'max_depth': [10],
+        'min_samples_split': [10],
+        'min_samples_leaf': [1],
+        'max_features': ['sqrt']
     }
 
     grid_search = GridSearchCV(rf, param_grid, cv=5, n_jobs=-1, verbose=2)
     grid_search.fit(X_train_res, y_train_res)
+    print(grid_search.best_params_)
     model = grid_search.best_estimator_
 
     # Predizioni
