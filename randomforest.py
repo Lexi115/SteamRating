@@ -10,6 +10,9 @@ import utils
 def get_dataframe_randomforest():
     df = pd.read_csv('./resources/games.csv')
 
+    #Rimozione soundtrack
+    df = df[~df['title'].str.contains('soundtrack', case=False, na=False)]
+
     # Pulizia outliers
     df = df[df['user_reviews'] > 20]
     df = df[df['price_final'] < 100]
@@ -25,7 +28,6 @@ def get_dataframe_randomforest():
 
     # Target
     df['liked'] = df['positive_ratio'].apply(lambda x: 1 if x >= 60 else 0)
-
     return df
 
 
@@ -35,9 +37,10 @@ def train():
     X = df[[
         'user_reviews',
         'price_final',
+        'discount',
         'is_multiplatform',
         'release_year',
-        'free_to_play',
+        'free_to_play'
     ]]
     y = df['liked']
 
@@ -53,7 +56,7 @@ def train():
 
     # Bilanciamento del training set
     X_train_res, y_train_res = utils.undersample(X_train, y_train, 0.63)
-    #X_train_res, y_train_res = utils.oversample(X_train_res, y_train_res)
+    #X_train_res, y_train_res = utils.oversample(X_train, y_train)
 
 
     # Addestramento modello
@@ -61,11 +64,11 @@ def train():
 
     # Ottimizzazione dei parametri con GridSearchCV
     param_grid = {
-        'n_estimators': [50],
-        'max_depth': [10],
-        'min_samples_split': [10],
-        'min_samples_leaf': [1],
-        'max_features': ['sqrt']
+        'n_estimators': [50, 100, 200],
+        'max_depth': [None, 10, 20, 30],
+        'min_samples_split': [2, 5, 10],
+        'min_samples_leaf': [1, 2, 4],
+        'max_features': [None, 'sqrt', 'log2']
     }
 
     grid_search = GridSearchCV(rf, param_grid, cv=5, n_jobs=-1, verbose=2)

@@ -10,6 +10,9 @@ import utils
 def get_dataframe_bernoulli():
     df = pd.read_csv('./resources/games.csv')
 
+    # Rimozione soundtrack
+    df = df[~df['title'].str.contains('soundtrack', case=False, na=False)]
+
     # Pulizia outliers
     df = df[df['user_reviews'] > 20]
     df = df[df['price_final'] < 100]
@@ -17,10 +20,12 @@ def get_dataframe_bernoulli():
     df['user_reviews_bin'] = df['user_reviews'].apply(lambda x: 1 if x >= 2000 else 0)
     df['price_final_f2p_bin'] = df['price_final'].apply(lambda x: 1 if x == 0 else 0)
     df['price_final_over_40_bin'] = df['price_final'].apply(lambda x: 1 if x >= 40 else 0)
+    df['has_discount'] = df['discount'].apply(lambda x: 1 if x > 0 else 0)
     df['is_multiplatform'] = df[['win', 'mac', 'linux']].sum(axis=1).apply(lambda x: 1 if x > 1 else 0)
     df['before_2019'] = df['date_release'].apply(lambda x: 1 if ((datetime.strptime(x, '%Y-%m-%d').year < 2019) and (datetime.strptime(x, '%Y-%m-%d').year >= 2010)) else 0)
     df['before_2010'] = df['date_release'].apply(lambda x: 1 if (datetime.strptime(x, '%Y-%m-%d').year < 2010) else 0)
     df['cross_reviews_2019'] = df['user_reviews_bin'] * df['before_2019']
+
     # target
     df['liked'] = df['positive_ratio'].apply(lambda x: 1 if x >= 60 else 0)
 
@@ -34,6 +39,7 @@ def train():
         'price_final_f2p_bin',
         'price_final_over_40_bin',
         'is_multiplatform',
+        'has_discount',
         'before_2019',
         'before_2010',
         'cross_reviews_2019'
