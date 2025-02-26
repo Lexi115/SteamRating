@@ -1,9 +1,7 @@
-import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import roc_curve, roc_auc_score
 from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.preprocessing import StandardScaler
 
 import utils
 
@@ -70,6 +68,14 @@ def train():
         'min_samples_leaf': [1, 2, 4],
         'max_features': [None, 'sqrt', 'log2']
     }
+    # parametri ottimali
+    # param_grid = {
+    #     'n_estimators': [100],
+    #     'max_depth': [10],
+    #     'min_samples_split': [10],
+    #     'min_samples_leaf': [2],
+    #     'max_features': ['sqrt']
+    # }
 
     grid_search = GridSearchCV(rf, param_grid, cv=5, n_jobs=-1, verbose=2)
     grid_search.fit(X_train_res, y_train_res)
