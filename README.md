@@ -4,14 +4,12 @@
   <br>
 </p>
 
-# 🎮 SteamRating - Predict Steam Game Popularity
+# 🎮 SteamRating 📈
 
 [![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/)
 [![scikit-learn](https://img.shields.io/badge/scikit--learn-1.4.0-orange)](https://scikit-learn.org/)
 [![Pandas](https://img.shields.io/badge/pandas-2.2.0-lightgrey)](https://pandas.pydata.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-> Prevedi se un gioco su Steam piace oppure no basandoti sulle sue caratteristiche.
 
 ## 📚 Descrizione
 
