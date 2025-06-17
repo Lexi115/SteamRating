@@ -1,4 +1,9 @@
-![steamrating](https://github.com/user-attachments/assets/f53fefc0-749f-4dca-82f2-f37032738f58)
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/f53fefc0-749f-4dca-82f2-f37032738f58" alt="immagine centrata" style="width: 250px" />
+  <br>
+</p>
+
 # 🎮 SteamRating - Predict Steam Game Popularity
 
 [![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/)
